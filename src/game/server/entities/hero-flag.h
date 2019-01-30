@@ -8,18 +8,17 @@
 class CHeroFlag : public CEntity
 {
 private:
-	bool m_Hidden;
 	int m_CoolDownTick;
-	
+	int m_OwnerID;
+	int m_HeroFlagID;
+
 public:
 	static const int ms_PhysSize = 14;
 
-	CHeroFlag(CGameWorld *pGameWorld);
+	CHeroFlag(CGameWorld *pGameWorld, int ClientID);
 
 	inline int GetCoolDown() { return m_CoolDownTick; }
 
-	virtual void Hide();
-	virtual void Show();
 	virtual void Tick();
 	virtual void FindPosition();
 	virtual void Snap(int SnappingClient);

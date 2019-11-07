@@ -4413,8 +4413,8 @@ const char *CGameContext::Version() { return GAME_VERSION; }
 const char *CGameContext::NetVersion() { return GAME_NETVERSION; }
 
 
-
-IGameServer *CreateGameServer() { return new CGameContext; }
+// CreateGameServer moved to gamecontextmod.cpp
+// IGameServer *CreateGameServer() { return new CGameContext; }
 
 void CGameContext::List(int ClientID, const char* filter)
 {

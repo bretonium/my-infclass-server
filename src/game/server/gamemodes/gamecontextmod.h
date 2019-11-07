@@ -7,6 +7,8 @@ class CGameContextMod : public CGameContext
 {
 public:
 	CGameContextMod();
+
+	void OnTick() override;
 };
 
 #endif

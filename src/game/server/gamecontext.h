@@ -69,6 +69,7 @@ enum
 
 class CGameContext : public IGameServer
 {
+protected:
 	IServer *m_pServer;
 	IStorage *m_pStorage;
 	class IConsole *m_pConsole;
@@ -296,7 +297,7 @@ public:
 	void SendScoreSound(int ClientID);
 	void AddBroadcast(int ClientID, const char* pText, int Priority, int LifeSpan);
 	
-private:
+protected:
 	int m_VoteLanguageTick[MAX_CLIENTS];
 	char m_VoteLanguage[MAX_CLIENTS][16];
 	int m_VoteBanClientID;

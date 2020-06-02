@@ -4509,16 +4509,12 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 		return;
 	}
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(m_apPlayers[i] && CGameContext::m_ClientMuted[pPlayer->m_LastWhisperTo][ClientID])
-			return;
-	}
-
 	if (pPlayer->m_LastWhisperTo < 0)
 		SendChatTarget(ClientID, "You do not have an ongoing conversation. Whisper to someone to start one");
 	else
 	{
+		if(m_apPlayers[pPlayer->m_LastWhisperTo] && CGameContext::m_ClientMuted[pPlayer->m_LastWhisperTo][ClientID])
+			return;
 		int TextIter = 0;
 		dynamic_string FinalMessage;
 		dynamic_string Buffer;

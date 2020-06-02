@@ -4497,7 +4497,7 @@ bool CGameContext::IsSpectatorCID(int ClientID) {
 	return std::find(vec.begin(), vec.end(), ClientID) != vec.end();
 }
 
-void CGameContext::Converse(int ClientID, char *pStr)
+void CGameContext::Converse(int ClientID, const char* pStr)
 {
 	CPlayer *pPlayer = m_apPlayers[ClientID];
 	if (!pPlayer)
@@ -4521,6 +4521,8 @@ void CGameContext::Converse(int ClientID, char *pStr)
 	{
 		int TextIter = 0;
 		dynamic_string FinalMessage;
+		dynamic_string Buffer;
+		Buffer.copy(pStr);
 		CNetMsg_Sv_Chat Msg;
 		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer->m_LastWhisperTo));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");

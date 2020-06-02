@@ -1467,6 +1467,11 @@ void CGameContext::OnClientDrop(int ClientID, int Type, const char *pReason)
 		CGameContext::m_ClientMuted[i][ClientID] = false;
 	}
 	// InfClassR end
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(m_apPlayers[i] && m_apPlayers[i]->m_LastWhisperTo == ClientID)
+			m_apPlayers[i]->m_LastWhisperTo = -1;
+	}
 }
 
 int CGameContext::IsMapVote(const char *pVoteCommand)
@@ -1762,9 +1767,21 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				PrivateMessage(pMsg->m_pMessage+5, ClientID, (Team != CGameContext::CHAT_ALL));
 			}
+			else if(str_comp_num(pMsg->m_pMessage, "/whisper ", 9) == 0)
+			{
+				PrivateMessage(pMsg->m_pMessage+9, ClientID, (Team != CGameContext::CHAT_ALL));
+			}
 			else if(str_comp_num(pMsg->m_pMessage, "/w ", 3) == 0)
 			{
 				PrivateMessage(pMsg->m_pMessage+3, ClientID, (Team != CGameContext::CHAT_ALL));
+			}
+			else if(str_comp_num(pMsg->m_pMessage, "/converse ", 10) == 0)
+			{
+				Converse(ClientID, pMsg->m_pMessage + 10);
+			}
+			else if(str_comp_num(pMsg->m_pMessage, "/c ", 3) == 0)
+			{
+				Converse(ClientID, pMsg->m_pMessage + 3);
 			}
 			else if(str_comp_num(pMsg->m_pMessage, "/mute ", 6) == 0)
 			{
@@ -3138,6 +3155,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 						CheckID = i;
 						str_copy(aChatTitle, "private", sizeof(aChatTitle));
 						CheckTeam = -1;
+						m_apPlayers[ClientID]->m_LastWhisperTo = i;
 						break;
 					}
 				}
@@ -3215,7 +3233,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 					TextIter = FinalMessage.append_at(TextIter, aNameFound);
 					TextIter = FinalMessage.append_at(TextIter, " (");
 					TextIter = FinalMessage.append_at(TextIter, aChatTitle);
-					TextIter = FinalMessage.append_at(TextIter, "): ");
+					TextIter = FinalMessage.append_at(TextIter, "): ");								
 				}
 				else
 				{
@@ -4477,4 +4495,31 @@ void CGameContext::RemoveSpectatorCID(int ClientID) {
 bool CGameContext::IsSpectatorCID(int ClientID) {
 	auto& vec = Server()->spectators_id;
 	return std::find(vec.begin(), vec.end(), ClientID) != vec.end();
+}
+
+void CGameContext::Converse(int ClientID, char *pStr)
+{
+	CPlayer *pPlayer = m_apPlayers[ClientID];
+	if (!pPlayer)
+		return;
+	if(Server()->GetClientSession(ClientID) && Server()->GetClientSession(ClientID)->m_MuteTick > 0)
+	{
+		int Time = Server()->GetClientSession(ClientID)->m_MuteTick/Server()->TickSpeed();
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_ACCUSATION, _("You are muted for {sec:Duration}"), "Duration", &Time, NULL);
+		return false;
+	}
+
+	if (pPlayer->m_LastWhisperTo < 0)
+		SendChatTarget(ClientID, "You do not have an ongoing conversation. Whisper to someone to start one");
+	else
+	{
+		int TextIter = 0;
+		dynamic_string FinalMessage;
+		CNetMsg_Sv_Chat Msg;
+		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer->m_LastWhisperTo));
+		TextIter = FinalMessage.append_at(TextIter, " (private): ");
+		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
+		Msg.m_pMessage = FinalMessage.buffer();
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->m_LastWhisperTo);
+	}
 }

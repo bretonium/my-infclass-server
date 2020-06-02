@@ -3233,7 +3233,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 					TextIter = FinalMessage.append_at(TextIter, aNameFound);
 					TextIter = FinalMessage.append_at(TextIter, " (");
 					TextIter = FinalMessage.append_at(TextIter, aChatTitle);
-					TextIter = FinalMessage.append_at(TextIter, "): ");								
+					TextIter = FinalMessage.append_at(TextIter, "): ");
 				}
 				else
 				{
@@ -4506,7 +4506,13 @@ void CGameContext::Converse(int ClientID, char *pStr)
 	{
 		int Time = Server()->GetClientSession(ClientID)->m_MuteTick/Server()->TickSpeed();
 		SendChatTarget_Localization(ClientID, CHATCATEGORY_ACCUSATION, _("You are muted for {sec:Duration}"), "Duration", &Time, NULL);
-		return false;
+		return;
+	}
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i] && CGameContext::m_ClientMuted[pPlayer->m_LastWhisperTo][ClientID])
+			return;
 	}
 
 	if (pPlayer->m_LastWhisperTo < 0)

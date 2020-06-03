@@ -4529,8 +4529,8 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 
 		FinalMessage.clear();
-		int TextIter = 0;
-		
+		TextIter = 0;
+
 		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(ClientID));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());

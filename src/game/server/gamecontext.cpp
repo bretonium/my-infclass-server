@@ -4526,14 +4526,14 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 		Buffer.copy(pStr);
 		CNetMsg_Sv_Chat Msg;
 
-		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer));
+		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer->m_LastWhisperTo));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
 		Msg.m_pMessage = FinalMessage.buffer();
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer);
 		FinalMessage.clear();
 
-		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer->m_LastWhisperTo));
+		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
 		Msg.m_pMessage = FinalMessage.buffer();

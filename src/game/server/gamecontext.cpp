@@ -4515,11 +4515,24 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 	{
 		if(m_apPlayers[pPlayer->m_LastWhisperTo] && CGameContext::m_ClientMuted[pPlayer->m_LastWhisperTo][ClientID])
 			return;
+
+		pStr += sizeof(Server()->ClientName(pPlayer->m_LastWhisperTo));
+		while(*pStr == ' ')
+			pStr++;
+		
 		int TextIter = 0;
 		dynamic_string FinalMessage;
 		dynamic_string Buffer;
 		Buffer.copy(pStr);
 		CNetMsg_Sv_Chat Msg;
+
+		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer));
+		TextIter = FinalMessage.append_at(TextIter, " (private): ");
+		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
+		Msg.m_pMessage = FinalMessage.buffer();
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer);
+		FinalMessage.clear();
+
 		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(pPlayer->m_LastWhisperTo));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());

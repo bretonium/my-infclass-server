@@ -1777,6 +1777,22 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				PrivateMessage(pMsg->m_pMessage+3, ClientID, (Team != CGameContext::CHAT_ALL));
 			}
+			else if(str_comp_num(pMsg->m_pMessage, "/whisper ", 9) == 0)
+			{
+				PrivateMessage(pMsg->m_pMessage+9, ClientID, (Team != CGameContext::CHAT_ALL));
+			}
+			else if(str_comp_num(pMsg->m_pMessage, "/w ", 3) == 0)
+			{
+				PrivateMessage(pMsg->m_pMessage+3, ClientID, (Team != CGameContext::CHAT_ALL));
+			}
+			else if(str_comp_num(pMsg->m_pMessage, "/converse ", 10) == 0)
+			{
+				Converse(ClientID, pMsg->m_pMessage + 10, Team);
+			}
+			else if(str_comp_num(pMsg->m_pMessage, "/c ", 3) == 0)
+			{
+				Converse(ClientID, pMsg->m_pMessage + 3, Team);
+			}
 			else if(str_comp_num(pMsg->m_pMessage, "/mute ", 6) == 0)
 			{
 				MutePlayer(pMsg->m_pMessage+6, ClientID);
@@ -3149,6 +3165,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 					{
 						CheckID = i;
 						str_copy(aChatTitle, "private", sizeof(aChatTitle));
+						str_copy(m_apPlayers[ClientID]->m_LastWhisperTo, aNameFound, sizeof(m_apPlayers[ClientID]->m_LastWhisperTo));
 						CheckTeam = -1;
 						break;
 					}
@@ -4502,4 +4519,20 @@ bool CGameContext::IsVersionBanned(int Version)
 int CGameContext::GetClientVersion(int ClientID)
 {
 	return m_apPlayers[ClientID]->m_ClientVersion;
+}
+
+void CGameContext::Converse(int ClientID, const char* pStr, int team)
+{
+	CPlayer *pPlayer = m_apPlayers[ClientID];
+	if (pPlayer->m_LastWhisperTo[0] == '\0')
+	{
+		SendChatTarget(ClientID, "You do not have an ongoing conversation. Whisper to someone to start one");
+	}
+	else
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s %s", pPlayer->m_LastWhisperTo, pStr);
+		//dbg_msg("TEST", aBuf);
+		PrivateMessage(aBuf, ClientID, (team != CGameContext::CHAT_ALL));
+	}
 }

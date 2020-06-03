@@ -4515,10 +4515,6 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 	{
 		if(m_apPlayers[pPlayer->m_LastWhisperTo] && CGameContext::m_ClientMuted[pPlayer->m_LastWhisperTo][ClientID])
 			return;
-
-		pStr += sizeof(Server()->ClientName(pPlayer->m_LastWhisperTo));
-		while(*pStr == ' ')
-			pStr++;
 		
 		int TextIter = 0;
 		dynamic_string FinalMessage;
@@ -4531,8 +4527,10 @@ void CGameContext::Converse(int ClientID, const char* pStr)
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
 		Msg.m_pMessage = FinalMessage.buffer();
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
-		FinalMessage.clear();
 
+		FinalMessage.clear();
+		int TextIter = 0;
+		
 		TextIter = FinalMessage.append_at(TextIter, Server()->ClientName(ClientID));
 		TextIter = FinalMessage.append_at(TextIter, " (private): ");
 		TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());

@@ -1686,6 +1686,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
 	CPlayer *pPlayer = m_apPlayers[ClientID];
 	
+	if (pPlayer && MsgID == (NETMSGTYPE_CL_CALLVOTE + 1)) 
+	{
+		int Version = pUnpacker->GetInt();
+
+		if(g_Config.m_SvBannedVersions[0] != '\0' && IsVersionBanned(Version))
+		{
+			Server()->Kick(ClientID, "unsupported client");
+		}
+
+		pPlayer->m_ClientVersion = Version;
+	}
 	//HACK: DDNet Client did something wrong that we can detect
 	//Round and Score conditions are here only to prevent false-positif
 	if(!pPlayer && Server()->GetClientNbRound(ClientID) <= 1 && Server()->GetClientNbRound(ClientID) == 0)
@@ -2726,9 +2737,10 @@ bool CGameContext::ConStartFunRound(IConsole::IResult *pResult, void *pUserData)
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	static const FunRoundSettings PossbleSettings[] = {
 		{ PLAYERCLASS_GHOST, PLAYERCLASS_SNIPER },
-		{ PLAYERCLASS_GHOUL, PLAYERCLASS_HERO },
+		{ PLAYERCLASS_GHOUL, PLAYERCLASS_BIOLOGIST },
 		{ PLAYERCLASS_BAT, PLAYERCLASS_MERCENARY },
 		{ PLAYERCLASS_BAT, PLAYERCLASS_NINJA },
+		{ PLAYERCLASS_GHOST, PLAYERCLASS_NINJA },
 		{ PLAYERCLASS_BOOMER, PLAYERCLASS_NINJA },
 		{ PLAYERCLASS_VOODOO, PLAYERCLASS_ENGINEER },
 		{ PLAYERCLASS_SLUG, PLAYERCLASS_HERO },
@@ -4477,4 +4489,17 @@ void CGameContext::RemoveSpectatorCID(int ClientID) {
 bool CGameContext::IsSpectatorCID(int ClientID) {
 	auto& vec = Server()->spectators_id;
 	return std::find(vec.begin(), vec.end(), ClientID) != vec.end();
+}
+
+bool CGameContext::IsVersionBanned(int Version)
+{
+	char aVersion[16];
+	str_format(aVersion, sizeof(aVersion), "%d", Version);
+
+	return str_in_list(g_Config.m_SvBannedVersions, ",", aVersion);
+}
+
+int CGameContext::GetClientVersion(int ClientID)
+{
+	return m_apPlayers[ClientID]->m_ClientVersion;
 }

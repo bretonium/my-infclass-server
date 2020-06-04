@@ -1778,10 +1778,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				PrivateMessage(pMsg->m_pMessage+5, ClientID, (Team != CGameContext::CHAT_ALL));
 			}
-			else if(str_comp_num(pMsg->m_pMessage, "/w ", 3) == 0)
-			{
-				PrivateMessage(pMsg->m_pMessage+3, ClientID, (Team != CGameContext::CHAT_ALL));
-			}
 			else if(str_comp_num(pMsg->m_pMessage, "/whisper ", 9) == 0)
 			{
 				PrivateMessage(pMsg->m_pMessage+9, ClientID, (Team != CGameContext::CHAT_ALL));

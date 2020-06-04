@@ -98,7 +98,7 @@ public:
 		int m_TargetY;
 	} m_LatestActivity;
 
-	char m_LastWhisperTo[32];
+	int m_LastWhisperId;
 
 	// network latency calculations
 	struct

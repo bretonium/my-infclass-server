@@ -115,6 +115,7 @@ m_pConsole(pConsole)
 	m_VoodooAboutToDie = false;
 	m_BroadcastWhiteHoleReady = -100;
 	m_pHeroFlag = nullptr;
+	m_aSoldier.m_CurrentBomb = NULL;
 /* INFECTION MODIFICATION END *****************************************/
 }
 
@@ -1975,7 +1976,8 @@ void CCharacter::Tick()
 			if(GetClass() == PLAYERCLASS_SOLDIER)
 			{
 				m_PositionLockTick = 0;
-				DestroySoldierTurret();
+				if(m_aSoldier.m_CurrentBomb != NULL)
+					DestroySoldierTurret();
 			}
 		}
 	}
@@ -2071,7 +2073,8 @@ void CCharacter::Tick()
 			m_PositionLocked = false;
 			if(GetClass() == PLAYERCLASS_SOLDIER)
 			{
-				DestroySoldierTurret();
+				if(m_aSoldier.m_CurrentBomb != NULL)
+					DestroySoldierTurret();
 			}
 		}
 	}
@@ -4209,16 +4212,6 @@ int CCharacter::GetInfZoneTick() // returns how many ticks long a player is alre
 
 void CCharacter::DestroySoldierTurret()
 {
-	bool flag;
-	for(CSoldierBomb *pBomb = (CSoldierBomb*) GameWorld()->FindFirst(CGameWorld::ENTTYPE_SOLDIER_BOMB); pBomb; pBomb = (CSoldierBomb*) pBomb->TypeNext())
-	{
-		if(pBomb->m_Owner == m_pPlayer->GetCID())
-		{
-			pBomb->Reset();
-			flag = true;
-		}
-		if(flag)
-			break;
-	}
+	m_aSoldier.m_CurrentBomb->Reset();
 }
 /* INFECTION MODIFICATION END *****************************************/

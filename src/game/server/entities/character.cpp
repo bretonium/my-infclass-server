@@ -1330,7 +1330,7 @@ void CCharacter::FireWeapon()
 							m_PositionLocked = true;
 							m_PositionLockAvailable = false;
 							m_Pos = m_aSoldier.m_CurrentBomb->m_Pos;	
-							GiveWeapon(WEAPON_GRENADE, 4);
+							GiveWeapon(WEAPON_GRENADE, g_Config.m_InfSoldierBombs + 1);
 							flag = true;
 						}
 						else

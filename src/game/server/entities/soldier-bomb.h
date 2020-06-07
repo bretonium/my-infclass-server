@@ -24,7 +24,8 @@ private:
 	int m_StartTick;
 	array<int> m_IDBomb;
 	int charged_bomb;
-	
+	int m_IDs[24];
+
 public:
 	float m_DetectionRadius;
 	int m_Owner;

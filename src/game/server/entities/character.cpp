@@ -617,10 +617,12 @@ void CCharacter::FireWeapon()
 
 	bool AutoFire = false;
 	bool FullAuto = false;
-	
-	if(m_ActiveWeapon == WEAPON_GUN || (m_ActiveWeapon == WEAPON_GRENADE && !m_aSoldier.m_TurretLastAmmo) || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
-		FullAuto = true;
+	int MaxAmmo = Server()->GetMaxAmmo(GetInfWeaponID(m_ActiveWeapon));
 
+	if(m_ActiveWeapon == WEAPON_GUN || m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
+		FullAuto = true;
+	if(GetClass() == PLAYERCLASS_SOLDIER && m_ActiveWeapon == WEAPON_GRENADE)
+		FullAuto = false;
 	if(GetClass() == PLAYERCLASS_SLUG && m_ActiveWeapon == WEAPON_HAMMER)
 		FullAuto = true;
 	
@@ -1315,6 +1317,13 @@ void CCharacter::FireWeapon()
 					bool flag = false;			
 					if(m_aSoldier.m_CurrentBomb != NULL && m_Pos.y > -600.0 && distance(m_Pos, m_aSoldier.m_CurrentBomb->m_Pos) <= 80)
 					{
+						if(m_aWeapons[WEAPON_GRENADE].m_Ammo != MaxAmmo && !m_PositionLocked)
+						{
+							char aBuf[128];
+							str_format(aBuf, sizeof(aBuf), "For turret mode you need %d ammo", MaxAmmo);
+							GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+							return;
+						}
 						if(m_PositionLockTick <= 0 && m_PositionLockAvailable)
 						{
 							m_PositionLockTick = Server()->TickSpeed()*15;
@@ -1768,6 +1777,8 @@ void CCharacter::HandleWeapons()
 		int AmmoRegenTime = Server()->GetAmmoRegenTime(InfWID);
 		int MaxAmmo = Server()->GetMaxAmmo(GetInfWeaponID(i));
 		
+		if(InfWID == INFWEAPON_SOLDIER_GRENADE && m_PositionLocked)
+			continue;
 		if(InfWID == INFWEAPON_NINJA_GRENADE)
 			MaxAmmo = min(MaxAmmo + m_NinjaAmmoBuff, 10);
 		
@@ -1856,11 +1867,11 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 	if(Ammo < 0)
 		Ammo = MaxAmmo;
 	
-	if(m_aWeapons[Weapon].m_Ammo < MaxAmmo || !m_aWeapons[Weapon].m_Got)
+	if(m_aWeapons[Weapon].m_Ammo <= MaxAmmo || !m_aWeapons[Weapon].m_Got)
 	{
 		m_aWeapons[Weapon].m_Got = true;
 		m_aWeapons[Weapon].m_Ammo = min(MaxAmmo, Ammo);
-		//dbg_msg("TEST", "TRUE")
+		//dbg_msg("TEST", "TRUE");
 		return true;
 	}
 	return false;

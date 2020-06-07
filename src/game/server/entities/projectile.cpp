@@ -146,7 +146,7 @@ void CProjectile::Tick()
 		{
 			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false, m_TakeDamageMode);
 			//Turret mode
-			if((OwnerChar->m_PositionLocked || OwnerChar->m_aSoldier.m_TurretAmmoExists) && OwnerChar->GetClass() == PLAYERCLASS_SOLDIER)
+			if((OwnerChar->m_PositionLocked || !OwnerChar->m_aSoldier.m_TurretAmmoExists.empty()) && OwnerChar->GetClass() == PLAYERCLASS_SOLDIER)
 			{
 				vec2 dir = normalize(OwnerChar->m_Pos - CurPos);
 				for(int i=0; i<6; i++)
@@ -164,9 +164,9 @@ void CProjectile::Tick()
 						GameServer()->CreateExplosion(CurPos + expPos, m_Owner, WEAPON_HAMMER, false, TAKEDAMAGEMODE_NOINFECTION);
 					}
 				}
-				if(OwnerChar->m_aSoldier.m_TurretAmmoExists)
+				if(!OwnerChar->m_aSoldier.m_TurretAmmoExists.empty())
 				{
-					OwnerChar->m_aSoldier.m_TurretAmmoExists = false;
+					OwnerChar->m_aSoldier.m_TurretAmmoExists.pop_back();
 				}
 			}
 		}

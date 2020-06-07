@@ -759,10 +759,12 @@ void CCharacter::FireWeapon()
 					{
 						pBomb->Explode();
 						BombFound = true;
+						if(pBomb->m_nbBomb == 0)
+							m_aSoldier.m_BombLockTick = Server()->TickSpeed() * 1.5;
 					}
 				}
 				
-				if(!BombFound)
+				if(!BombFound && m_aSoldier.m_BombLockTick <= 0)
 				{
 					m_aSoldier.m_CurrentBomb = new CSoldierBomb(GameWorld(), ProjStartPos, m_pPlayer->GetCID());
 					GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
@@ -1342,11 +1344,10 @@ void CCharacter::FireWeapon()
 						else
 						{
 							m_aSoldier.m_CurrentBomb->m_nbBomb--;
-							m_aSoldier.m_TurretAmmoExists = true;
+							m_aSoldier.m_TurretAmmoExists.push_back(true);
 							if(m_aSoldier.m_CurrentBomb->m_nbBomb == 0)
 							{
 								m_aSoldier.m_CurrentBomb->Reset();
-								m_aSoldier.m_TurretAmmoExists = true;
 								m_PositionLocked = false;
 								m_PositionLockTick = 0;
 							}
@@ -2074,7 +2075,17 @@ void CCharacter::Tick()
 			}
 		}
 	}
-	
+
+	if(m_aSoldier.m_BombLockTick > 0)
+	{
+		int Seconds = 1+m_aSoldier.m_BombLockTick/Server()->TickSpeed();
+		GameServer()->SendBroadcast_Localization(GetPlayer()->GetCID(), BROADCAST_PRIORITY_WEAPONSTATE, BROADCAST_DURATION_REALTIME,
+			_("Wait: {sec:RemainingTime} for bombs"), "RemainingTime", &Seconds,
+			NULL
+		);
+		--m_aSoldier.m_BombLockTick;
+	}
+
 	--m_FrozenTime;
 	if(m_IsFrozen)
 	{

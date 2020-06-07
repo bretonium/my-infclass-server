@@ -10,6 +10,7 @@
 
 #include "soldier-bomb.h"
 #include <game/gamecore.h>
+#include <list>
 
 class CPortal;
 
@@ -251,8 +252,9 @@ public:
 	//Soldier
 	struct Soldier
 	{
-		bool m_TurretAmmoExists;
+		std::list <bool> m_TurretAmmoExists;
 		CSoldierBomb *m_CurrentBomb;
+		int m_BombLockTick;
 	} m_aSoldier;
 
 public:

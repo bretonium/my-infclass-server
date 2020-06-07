@@ -618,7 +618,7 @@ void CCharacter::FireWeapon()
 	bool AutoFire = false;
 	bool FullAuto = false;
 	
-	if(m_ActiveWeapon == WEAPON_GUN || m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
+	if(m_ActiveWeapon == WEAPON_GUN || (m_ActiveWeapon == WEAPON_GRENADE && !m_aSoldier.m_TurretLastAmmo) || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
 		FullAuto = true;
 
 	if(GetClass() == PLAYERCLASS_SLUG && m_ActiveWeapon == WEAPON_HAMMER)
@@ -762,7 +762,7 @@ void CCharacter::FireWeapon()
 				
 				if(!BombFound)
 				{
-					new CSoldierBomb(GameWorld(), ProjStartPos, m_pPlayer->GetCID());
+					m_aSoldier.m_CurrentBomb = new CSoldierBomb(GameWorld(), ProjStartPos, m_pPlayer->GetCID());
 					GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
 				}
 			}
@@ -1310,15 +1310,63 @@ void CCharacter::FireWeapon()
 					GetPlayer()->ResetNumberKills();
 					return;
 				}
-				else 
+				else if(GetClass() == PLAYERCLASS_SOLDIER)
 				{
+					bool flag = false;			
+					if(m_aSoldier.m_CurrentBomb != NULL && m_Pos.y > -600.0 && distance(m_Pos, m_aSoldier.m_CurrentBomb->m_Pos) <= 80)
+					{
+						if(m_PositionLockTick <= 0 && m_PositionLockAvailable)
+						{
+							m_PositionLockTick = Server()->TickSpeed()*15;
+							m_PositionLocked = true;
+							m_PositionLockAvailable = false;
+							m_Pos = m_aSoldier.m_CurrentBomb->m_Pos;	
+							GiveWeapon(WEAPON_GRENADE, 4);
+							flag = true;
+						}
+						else
+						{
+							m_aSoldier.m_CurrentBomb->m_nbBomb--;
+							m_aSoldier.m_TurretLastAmmo = true;
+							if(m_aSoldier.m_CurrentBomb->m_nbBomb == 0)
+							{
+								m_aSoldier.m_CurrentBomb->Reset();
+								m_aSoldier.m_TurretLastAmmo = true;
+								m_PositionLocked = false;
+								m_PositionLockTick = 0;
+							}
+						}								
+					}
+					if(!flag)
+					{
+						CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
+															m_pPlayer->GetCID(),
+															ProjStartPos,
+											Direction,
+											(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
+															1, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+
+						// pack the Projectile and send it to the client Directly
+						CNetObj_Projectile p;
+						pProj->FillInfo(&p);
+						
+						CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+						Msg.AddInt(1);
+						for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
+							Msg.AddInt(((int *)&p)[i]);
+						Server()->SendMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+					
+						GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+					}
+				}
+				else 
+				{					
 					CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
 														 m_pPlayer->GetCID(),
 														 ProjStartPos,
 										  Direction,
 										  (int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
 														 1, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
-					
 					if(GetClass() == PLAYERCLASS_NINJA)
 					{
 						pProj->FlashGrenade();
@@ -1901,11 +1949,16 @@ void CCharacter::Tick()
 		);
 	}
 
-	if(GetClass() == PLAYERCLASS_SNIPER && m_PositionLocked)
+	if((GetClass() == PLAYERCLASS_SNIPER || GetClass() == PLAYERCLASS_SOLDIER) && m_PositionLocked)
 	{
 		if(m_Input.m_Jump && !m_PrevInput.m_Jump)
 		{
 			m_PositionLocked = false;
+			if(GetClass() == PLAYERCLASS_SOLDIER)
+			{
+				m_PositionLockTick = 0;
+				DestroySoldierTurret();
+			}
 		}
 	}
 	
@@ -1996,7 +2049,13 @@ void CCharacter::Tick()
 	{
 		--m_PositionLockTick;
 		if(m_PositionLockTick <= 0)
+		{
 			m_PositionLocked = false;
+			if(GetClass() == PLAYERCLASS_SOLDIER)
+			{
+				DestroySoldierTurret();
+			}
+		}
 	}
 	
 	--m_FrozenTime;
@@ -2235,7 +2294,7 @@ void CCharacter::Tick()
 	{
 		m_DartLeft = g_Config.m_InfNinjaJump;
 	}
-	if(GetClass() == PLAYERCLASS_SNIPER && m_InAirTick <= Server()->TickSpeed())
+	if((GetClass() == PLAYERCLASS_SNIPER || GetClass() == PLAYERCLASS_SOLDIER) && m_InAirTick <= Server()->TickSpeed())
 	{
 		m_PositionLockAvailable = true;
 	}
@@ -2246,7 +2305,7 @@ void CCharacter::Tick()
 		m_Input.m_Direction = 0;
 		m_Input.m_Hook = 0;
 	}
-	else if(GetClass() == PLAYERCLASS_SNIPER && m_PositionLocked)
+	else if((GetClass() == PLAYERCLASS_SNIPER || GetClass() == PLAYERCLASS_SOLDIER) && m_PositionLocked)
 	{
 		m_Input.m_Jump = 0;
 		m_Input.m_Direction = 0;
@@ -2273,7 +2332,7 @@ void CCharacter::Tick()
 	vec2 PrevPos = m_Core.m_Pos;
 	m_Core.Tick(true, &CoreTickParams);
 	
-	if(GetClass() == PLAYERCLASS_SNIPER && m_PositionLocked)
+	if((GetClass() == PLAYERCLASS_SNIPER || GetClass() == PLAYERCLASS_SOLDIER) && m_PositionLocked)
 	{
 		m_Core.m_Vel = vec2(0.0f, 0.0f);
 		m_Core.m_Pos = PrevPos;
@@ -2535,11 +2594,23 @@ void CCharacter::Tick()
 		
 		if(NumBombs)
 		{
-			GameServer()->SendBroadcast_Localization_P(GetPlayer()->GetCID(), BROADCAST_PRIORITY_WEAPONSTATE, BROADCAST_DURATION_REALTIME, NumBombs,
-				_P("One bomb left", "{int:NumBombs} bombs left"),
-				"NumBombs", &NumBombs,
-				NULL
-			);
+			if(m_PositionLocked)
+			{
+				int Seconds = 1+m_PositionLockTick/Server()->TickSpeed();
+				GameServer()->SendBroadcast_Localization_P(GetPlayer()->GetCID(), BROADCAST_PRIORITY_WEAPONSTATE, BROADCAST_DURATION_REALTIME, NumBombs,
+					_P("One bomb left", "{int:NumBombs} bombs left | Position lock: {sec:RemainingTime}"),
+					"NumBombs", &NumBombs, "RemainingTime", &Seconds,
+					NULL
+				);
+			}
+			else
+			{
+				GameServer()->SendBroadcast_Localization_P(GetPlayer()->GetCID(), BROADCAST_PRIORITY_WEAPONSTATE, BROADCAST_DURATION_REALTIME, NumBombs,
+					_P("One bomb left", "{int:NumBombs} bombs left"),
+					"NumBombs", &NumBombs,
+					NULL
+				);
+			}
 		}
 	}
 	else if(GetClass() == PLAYERCLASS_SCIENTIST)
@@ -4106,5 +4177,20 @@ int CCharacter::GetInfZoneTick() // returns how many ticks long a player is alre
 {
 	if (m_InfZoneTick < 0) return 0;
 	return Server()->Tick()-m_InfZoneTick;
+}
+
+void CCharacter::DestroySoldierTurret()
+{
+	bool flag;
+	for(CSoldierBomb *pBomb = (CSoldierBomb*) GameWorld()->FindFirst(CGameWorld::ENTTYPE_SOLDIER_BOMB); pBomb; pBomb = (CSoldierBomb*) pBomb->TypeNext())
+	{
+		if(pBomb->m_Owner == m_pPlayer->GetCID())
+		{
+			pBomb->Reset();
+			flag = true;
+		}
+		if(flag)
+			break;
+	}
 }
 /* INFECTION MODIFICATION END *****************************************/

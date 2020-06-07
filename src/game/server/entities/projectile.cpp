@@ -145,6 +145,29 @@ void CProjectile::Tick()
 		else if(m_Explosive)
 		{
 			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false, m_TakeDamageMode);
+			if((OwnerChar->m_PositionLocked || OwnerChar->m_aSoldier.m_TurretLastAmmo) && OwnerChar->GetClass() == PLAYERCLASS_SOLDIER)
+			{
+				vec2 dir = normalize(OwnerChar->m_Pos - CurPos);
+				for(int i=0; i<6; i++)
+				{
+					float angle = static_cast<float>(i)*2.0*pi/6.0;
+					vec2 expPos = CurPos + vec2(90.0*cos(angle), 90.0*sin(angle));
+					GameServer()->CreateExplosion(expPos, m_Owner, WEAPON_HAMMER, false, TAKEDAMAGEMODE_NOINFECTION);
+				}
+				for(int i=0; i<12; i++)
+				{
+					float angle = static_cast<float>(i)*2.0*pi/12.0;
+					vec2 expPos = vec2(180.0*cos(angle), 180.0*sin(angle));
+					if(dot(expPos, dir) <= 0)
+					{
+						GameServer()->CreateExplosion(CurPos + expPos, m_Owner, WEAPON_HAMMER, false, TAKEDAMAGEMODE_NOINFECTION);
+					}
+				}
+				if(OwnerChar->m_aSoldier.m_TurretLastAmmo)
+				{
+					OwnerChar->m_aSoldier.m_TurretLastAmmo = false;
+				}
+			}
 		}
 		else if(TargetChr)
 		{

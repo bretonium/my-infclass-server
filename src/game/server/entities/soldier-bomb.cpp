@@ -32,6 +32,7 @@ CSoldierBomb::~CSoldierBomb()
 
 void CSoldierBomb::Reset()
 {
+	GameServer()->GetPlayerChar(m_Owner)->m_aSoldier.m_CurrentBomb = NULL;
 	GameServer()->m_World.DestroyEntity(this);
 }
 
@@ -77,6 +78,7 @@ void CSoldierBomb::Explode()
 	
 	if(m_nbBomb == 0)
 	{
+		OwnerChar->m_aSoldier.m_CurrentBomb = NULL;
 		GameServer()->m_World.DestroyEntity(this);
 	}
 }

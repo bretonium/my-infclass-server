@@ -251,7 +251,7 @@ public:
 	//Soldier
 	struct Soldier
 	{
-		bool m_TurretLastAmmo;
+		bool m_TurretAmmoExists;
 		CSoldierBomb *m_CurrentBomb;
 	} m_aSoldier;
 

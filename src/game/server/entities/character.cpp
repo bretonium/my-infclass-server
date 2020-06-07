@@ -1314,6 +1314,12 @@ void CCharacter::FireWeapon()
 				}
 				else if(GetClass() == PLAYERCLASS_SOLDIER)
 				{
+					/*
+					 * The soldier can use the turret mode.
+					 *
+					 * To switch to the turret mode, you need to make a shot within the radius of the soldier's bombs, 
+					 * loose all the ammo and stopping in motion
+					 */
 					bool flag = false;			
 					if(m_aSoldier.m_CurrentBomb != NULL && m_Pos.y > -600.0 && distance(m_Pos, m_aSoldier.m_CurrentBomb->m_Pos) <= 80)
 					{
@@ -1336,11 +1342,11 @@ void CCharacter::FireWeapon()
 						else
 						{
 							m_aSoldier.m_CurrentBomb->m_nbBomb--;
-							m_aSoldier.m_TurretLastAmmo = true;
+							m_aSoldier.m_TurretAmmoExists = true;
 							if(m_aSoldier.m_CurrentBomb->m_nbBomb == 0)
 							{
 								m_aSoldier.m_CurrentBomb->Reset();
-								m_aSoldier.m_TurretLastAmmo = true;
+								m_aSoldier.m_TurretAmmoExists = true;
 								m_PositionLocked = false;
 								m_PositionLockTick = 0;
 							}

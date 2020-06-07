@@ -32,11 +32,14 @@ CSoldierBomb::~CSoldierBomb()
 {
 	for(int i=0; i<m_IDBomb.size(); i++)
 		Server()->SnapFreeID(m_IDBomb[i]);
+	for(int i=0; i<24; i++)
+	{
+		Server()->SnapFreeID(m_IDs[i]);
+	}
 }
 
 void CSoldierBomb::Reset()
 {
-	GameServer()->GetPlayerChar(m_Owner)->m_aSoldier.m_CurrentBomb = NULL;
 	GameServer()->m_World.DestroyEntity(this);
 }
 

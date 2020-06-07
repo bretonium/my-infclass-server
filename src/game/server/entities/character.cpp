@@ -4213,5 +4213,6 @@ int CCharacter::GetInfZoneTick() // returns how many ticks long a player is alre
 void CCharacter::DestroySoldierTurret()
 {
 	m_aSoldier.m_CurrentBomb->Reset();
+	m_aSoldier.m_CurrentBomb = NULL;
 }
 /* INFECTION MODIFICATION END *****************************************/

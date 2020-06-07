@@ -1524,7 +1524,7 @@ void CCharacter::CheckSuperWeaponAccess()
 	}
 	
 	//Only looper and soldier can receive stun grenades
-	if(GetClass() == PLAYERCLASS_LOOPER || GetClass() == PLAYERCLASS_SOLDIER)
+	if(GetClass() == PLAYERCLASS_LOOPER)
 	{
 		if (!m_HasStunGrenade)
 		{

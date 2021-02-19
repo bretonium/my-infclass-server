@@ -1,5 +1,8 @@
 # Teeworlds InfClassR
 Slightly modified version of original [InfClass by necropotame](https://github.com/necropotame/teeworlds-infclass).
+
+Do not use it. Instead, go to currently developed version: https://github.com/InfectionDust/teeworlds-infclassR
+
 ## Additional dependencies
 [GeoLite2++](https://www.ccoderun.ca/GeoLite2++/api/) is used for IP geolocation
 ```bash

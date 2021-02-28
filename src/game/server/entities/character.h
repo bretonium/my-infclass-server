@@ -8,7 +8,9 @@
 #include <game/generated/server_data.h>
 #include <game/generated/protocol.h>
 
+#include "soldier-bomb.h"
 #include <game/gamecore.h>
+#include <list>
 
 class CPortal;
 
@@ -108,6 +110,7 @@ public:
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 	
 	void GiveNinjaBuf();
+	void DestroySoldierTurret();
 
 private:
 	// player controlling this character
@@ -246,6 +249,13 @@ public:
 	//Mercenary
 	bool m_BombHit;
 	vec2 m_AtMercBomb;
+	//Soldier
+	struct Soldier
+	{
+		std::list <bool> m_TurretAmmoExists;
+		CSoldierBomb *m_CurrentBomb;
+		int m_BombLockTick;
+	} m_aSoldier;
 
 public:
 	void DestroyChildEntities();

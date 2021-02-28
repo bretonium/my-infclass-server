@@ -23,12 +23,13 @@ private:
 	virtual void ChargeBomb(float time);
 	int m_StartTick;
 	array<int> m_IDBomb;
-	int m_nbBomb;
 	int charged_bomb;
-	
+	int m_IDs[24];
+
 public:
 	float m_DetectionRadius;
 	int m_Owner;
+	int m_nbBomb;
 };
 
 #endif

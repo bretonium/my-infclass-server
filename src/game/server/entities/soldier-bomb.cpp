@@ -22,12 +22,20 @@ CSoldierBomb::CSoldierBomb(CGameWorld *pGameWorld, vec2 Pos, int Owner)
 	{
 		m_IDBomb[i] = Server()->SnapNewID();
 	}
+	for(int i=0; i<24; i++)
+	{
+		m_IDs[i] = Server()->SnapNewID();
+	}
 }
 
 CSoldierBomb::~CSoldierBomb()
 {
 	for(int i=0; i<m_IDBomb.size(); i++)
 		Server()->SnapFreeID(m_IDBomb[i]);
+	for(int i=0; i<24; i++)
+	{
+		Server()->SnapFreeID(m_IDs[i]);
+	}
 }
 
 void CSoldierBomb::Reset()
@@ -77,6 +85,7 @@ void CSoldierBomb::Explode()
 	
 	if(m_nbBomb == 0)
 	{
+		OwnerChar->m_aSoldier.m_CurrentBomb = NULL;
 		GameServer()->m_World.DestroyEntity(this);
 	}
 }
@@ -113,6 +122,31 @@ void CSoldierBomb::Snap(int SnappingClient)
 		pProj->m_VelY = (int)(0.0f);
 		pProj->m_StartTick = Server()->Tick();
 		pProj->m_Type = WEAPON_GRENADE;
+	}
+
+	if(GameServer()->GetPlayerChar(m_Owner)->m_PositionLocked)
+	{
+		float Radius = m_DetectionRadius + 20;
+		
+		int NumSide = 12;
+		
+		float AngleStep = 2.0f * pi / NumSide;
+		
+		for(int i=0; i<NumSide; i++)
+		{
+			vec2 PartPosStart = m_Pos + vec2(Radius * cos(AngleStep*i), Radius * sin(AngleStep*i));
+			vec2 PartPosEnd = m_Pos + vec2(Radius * cos(AngleStep*(i+1)), Radius * sin(AngleStep*(i+1)));
+			
+			CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_IDs[i], sizeof(CNetObj_Laser)));
+			if(!pObj)
+				return;
+
+			pObj->m_X = (int)PartPosStart.x;
+			pObj->m_Y = (int)PartPosStart.y;
+			pObj->m_FromX = (int)PartPosEnd.x;
+			pObj->m_FromY = (int)PartPosEnd.y;
+			pObj->m_StartTick = Server()->Tick();
+		}
 	}
 }
 
